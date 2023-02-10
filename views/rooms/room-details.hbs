@@ -4,13 +4,24 @@
 
 <a href="/rooms/delete/{{_id}}"><button>Delete</button></a>
 
+<form action="/rooms/add-review/{{_id}}" method="post">
+    <label for="">New Comment</label>
+    <input type="text" name="comment">
+
+    <button type="submit">Add Comment</button>
+
+</form>
+
 {{#if reviews}}
 
     <ul>
 
     {{#each reviews}}
 
-        <li>Review</li>
+        <li>
+            <p>{{comment}}</p>
+            <h6>-{{user.fullName}}</h6>
+        </li>
 
     {{/each}}
 
@@ -21,3 +32,4 @@
     <p>No Reviews yet</p>
 
 {{/if}}
+

@@ -1,9 +1,11 @@
 var express = require('express');
 var router = express.Router();
 
-const { isLoggedIn, isOwner } = require('../middleware/route-guard')
+const { isLoggedIn, isOwner, isNotOwner } = require('../middleware/route-guard')
 
 const Room = require('../models/Room.model')
+
+const Review = require('../models/Review.model')
 
 router.get('/all-rooms', (req, res, next) => {
 
@@ -46,6 +48,10 @@ router.get('/details/:id', (req, res, next) => {
     
     Room.findById(req.params.id)
     .populate('owner')
+    .populate({
+        path: "reviews",
+        populate: {path: "user"}
+    })
     .then((foundRoom) => {
         res.render('rooms/room-details.hbs', foundRoom)
     })
@@ -83,5 +89,38 @@ router.post('/edit/:id', (req, res, next) => {
         console.log(err)
     })
 }) 
+
+router.get('/delete/:id', isOwner, (req, res, next) => {
+    Room.findByIdAndDelete(req.params.id)
+    .then((confirmation) => {
+        console.log(confirmation)
+        res.redirect('/rooms/all-rooms')
+    })
+    .catch((err) => {
+        console.log(err)
+    })
+})
+
+router.post('/add-review/:id', isNotOwner, (req, res, next) => {
+
+    Review.create({
+        user: req.session.user._id,
+        comment: req.body.comment
+    })
+    .then((newReview) => {
+       return Room.findByIdAndUpdate(req.params.id, 
+            {
+                $push: {reviews: newReview._id}
+            },
+            {new: true})
+    })
+    .then((roomWithReview) => {
+        console.log(roomWithReview)
+        res.redirect(`/rooms/details/${req.params.id}`)
+    })
+    .catch((err) => {
+        console.log(err)
+    })
+})
 
 module.exports = router;

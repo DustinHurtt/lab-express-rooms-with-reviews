@@ -36,8 +36,26 @@ const isOwner = (req, res, next) => {
 
 }
 
+const isNotOwner = (req, res, next) => {
+
+    Room.findById(req.params.id)
+    .populate('owner')
+    .then((foundRoom) => {
+        if (!req.session.user || foundRoom.owner._id.toString() === req.session.user._id) {
+            res.render('index.hbs', {errorMessage: "You can't review your own room."})
+        } else {
+            next()
+        }
+    })
+    .catch((err) => {
+        console.log(err)
+    })
+
+}
+
 module.exports = {
 isLoggedIn,
 isLoggedOut,
-isOwner
+isOwner,
+isNotOwner
 };
