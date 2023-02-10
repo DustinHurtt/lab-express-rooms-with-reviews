@@ -1,7 +1,7 @@
 var express = require('express');
 var router = express.Router();
 
-const { isLoggedIn } = require('../middleware/route-guard')
+const { isLoggedIn, isOwner } = require('../middleware/route-guard')
 
 const Room = require('../models/Room.model')
 
@@ -54,5 +54,34 @@ router.get('/details/:id', (req, res, next) => {
     })
 
 })
+
+router.get('/edit/:id', isOwner, (req, res, next) => {
+
+    Room.findById(req.params.id)
+    .then((foundRoom) => {
+        res.render('rooms/edit-room.hbs', foundRoom)
+    })
+    .catch((err) => {
+        console.log(err)
+    })
+})
+
+router.post('/edit/:id', (req, res, next) => {
+    const { name, description, imageUrl } = req.body
+    Room.findByIdAndUpdate(req.params.id, 
+        {
+            name, 
+            description,
+            imageUrl
+        },
+        {new: true})
+    .then((updatedRoom) => {
+        console.log(updatedRoom)
+        res.redirect(`/rooms/details/${req.params.id}`)
+    })
+    .catch((err) => {
+        console.log(err)
+    })
+}) 
 
 module.exports = router;

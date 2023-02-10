@@ -1,5 +1,7 @@
 // middleware/route-guard.js
 
+const Room = require('../models/Room.model')
+
 // checks if the user is logged in when trying to access a specific page
 const isLoggedIn = (req, res, next) => {
     if (!req.session.user) {
@@ -17,7 +19,25 @@ if (req.session.user) {
 next();
 };
 
+const isOwner = (req, res, next) => {
+
+    Room.findById(req.params.id)
+    .populate('owner')
+    .then((foundRoom) => {
+        if (!req.session.user || foundRoom.owner._id.toString() !== req.session.user._id) {
+            res.render('index.hbs', {errorMessage: "You are not authorized."})
+        } else {
+            next()
+        }
+    })
+    .catch((err) => {
+        console.log(err)
+    })
+
+}
+
 module.exports = {
 isLoggedIn,
-isLoggedOut
+isLoggedOut,
+isOwner
 };
